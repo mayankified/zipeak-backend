@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String   // You will hash this in your application logic
+  role      UserRole @default(BROKER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Property {
+  id String @id @default(cuid())
+
+  // Core Details
+  title       String
+  description String
+  price       Float
+  pricePerSqFt Float
+  postedDate  DateTime @default(now())
+
+  // Location Details (Flattened)
+  city        String
+  area        String
+  fullAddress String
+
+  // Specification Details (Flattened)
+  propertyType      PropertyType
+  bhk               Int
+  bathrooms         Int
+  balconies         Int?
+  superBuiltUpArea  Float
+  carpetArea        Float
+  furnishing        FurnishingStatus
+  floorNumber       Int?
+  totalFloors       Int?
+  facing            Facing?
+  ageOfProperty     Float?
+
+  // Availability Details
+  availability      AvailabilityStatus
+  expectedPossession DateTime?
+
+  // Additional Features
+  amenities String[] // Uses native PostgreSQL array
+  images    String[] // Uses native PostgreSQL array
+
+  // Ownership & Timestamps
+   leads            Lead[]
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String     @unique
+  email     String?
+  message   String?
+  status    LeadStatus @default(NEW)
+  notes     String?    // For internal notes by salesmen
+
+  // Relation to the properties this lead is interested in (Many-to-Many)
+  properties Property[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- ENUMS ---
+
+enum UserRole {
+  ADMIN
+  BROKER
+  SALESMAN
+}
+
+enum PropertyType {
+  Apartment
+  Villa
+  Plot
+  House
+}
+
+enum FurnishingStatus {
+  Unfurnished
+  Semi_Furnished
+  Fully_Furnished
+}
+
+enum Facing {
+  North
+  South
+  East
+  West
+  North_East
+  North_West
+  South_East
+  South_West
+}
+
+enum AvailabilityStatus {
+  Ready_to_Move
+  Under_Construction
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  FOLLOW_UP
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+  DROPPED
+}
